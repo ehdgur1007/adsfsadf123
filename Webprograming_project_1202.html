@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <title>알람 예제</title>
+    <style>
+        table {border-collapse: collapse;}
+        th,td {padding: 5px; text-align: center;}
+        .saturday {color: gray;}
+        .sunday,.holiday,.today {color: red;}
+        .today {border: 1px; border-radius: 50%;color: white;background-color: red;}
+        #calendarControls {text-align: center;}
+    </style>
+</head>
+
+<body>
+    <div id="calendarControls">
+        <button id="prevMonth">←</button>
+        <span id="calendarLabel"></span>
+        <button id="nextMonth">→</button>
+    </div>
+    <div id="calendar"></div>
+
+    <div id="eventForm" style="display: none;">
+        <form onsubmit="saveEvent(); return false;">
+            <label for="eventDate">날짜:</label>
+            <input type="text" id="eventDate" readonly>
+            <br>
+            <label for="eventTime">시간:</label>
+            <input type="time" id="eventTime">
+            <br>
+            <label for="eventContent">일정:</label>
+            <input type="text" id="eventContent" required>
+            <br>
+            <input type="submit" value="저장">
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script>
+        var currentYear, currentMonth;
+        var events = {}; // 날짜별 일정을 저장할 객체
+
+        window.onload = function () {
+            var date = new Date();
+            currentYear = date.getFullYear();
+            currentMonth = date.getMonth() + 1;
+            updateCalendar();
+        }
+
+        document.getElementById('prevMonth').addEventListener('click', function () {
+            currentMonth--;
+            if (currentMonth < 1) {
+                currentMonth = 12;
+                currentYear--;
+            }
+            updateCalendar();
+        });
+
+        document.getElementById('nextMonth').addEventListener('click', function () {
+            currentMonth++;
+            if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            }
+            updateCalendar();
+        });
+
+        function updateCalendar() {
+            document.getElementById('calendarLabel').textContent = currentYear + '년 ' + currentMonth + '월';
+            generateCalendar(currentYear, currentMonth);
+        }
+
+        function generateCalendar(year, month) {
+            var date = new Date(year, month - 1, 1);
+            var daysInMonth = new Date(year, month, 0).getDate();
+            var dayOfWeek = date.getDay();
+            var calendar = '<table><tr><th class="sunday">일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th class="saturday">토</th></tr><tr>';
+
+            for (var i = 0; i < dayOfWeek; i++) {
+                calendar += '<td></td>';
+            }
+
+            for (var i = 1; i <= daysInMonth; i++) {
+                if (dayOfWeek == 7) {
+                    dayOfWeek = 0;
+                    calendar += '</tr><tr>';
+                }
+                var dayClass = '';
+                if (dayOfWeek == 0) {
+                    dayClass = 'sunday';
+                } else if (dayOfWeek == 6) {
+                    dayClass = 'saturday';
+                }
+
+                // 현재 날짜이면 today 클래스 추가
+                if (i === new Date().getDate() && currentYear === new Date().getFullYear() && currentMonth === new Date().getMonth() + 1) {
+                    calendar += '<td class="' + dayClass + ' today" onclick="showEventForm(' + currentYear + ',' + currentMonth + ',' + i + ')">' + i + '</td>';
+                } else {
+                    calendar += '<td class="' + dayClass + '" onclick="showEventForm(' + currentYear + ',' + currentMonth + ',' + i + ')">' + i + '</td>';
+                }
+
+                dayOfWeek++;
+            }
+
+            while (dayOfWeek < 7) {
+                calendar += '<td></td>';
+                dayOfWeek++;
+            }
+
+            calendar += '</tr></table>';
+            $("#calendar").html(calendar); // jQuery를 사용하여 calendar에 HTML을 삽입
+        }
+
+        function showEventForm(year, month, day) {
+            var date = new Date();
+            var hours = date.getHours();
+            var minutes = date.getMinutes();
+            var dateString = year + "년 " + month + "월 " + day + "일";
+            document.getElementById('eventDate').value = dateString;
+            document.getElementById('eventTime').value = (hours < 10 ? '0' : '') + hours + ":" + (minutes < 10 ? '0' : '') + minutes;
+
+            // 해당 날짜와 시간에 대한 일정을 폼에 표시
+            var eventKey = dateString + " " + document.getElementById('eventTime').value;
+            if (events[eventKey]) {
+                document.getElementById('eventContent').value = events[eventKey];
+            } else {
+                document.getElementById('eventContent').value = '';
+            }
+
+            // 일정 추가 폼을 화면에 표시
+            document.getElementById('eventForm').style.display = 'block';
+
+            // 알림 설정
+            setReminder(year, month, day, hours, minutes);
+        }
+
+
+
+
+        function setReminder(year, month, day) {
+            var dateString = year + "년 " + month + "월 " + day + "일";
+
+            var reminderDate = new Date(year, month - 1, day);
+            var currentDate = new Date();
+            var timeDiff = reminderDate.getTime() - currentDate.getTime();
+
+            if (timeDiff > 0) {
+                setTimeout(function () {
+                    showNotification("일정 알림", dateString + "의 일정이 있습니다!");
+                }, timeDiff);
+            } else {
+                alert("이미 지난 날짜에는 알림을 설정할 수 없습니다.");
+            }
+        }
+
+        function showNotification(title, body) {
+            // Notification 권한 요청
+            Notification.requestPermission().then(function (permission) {
+                if (permission === "granted") {
+                    // Notification 생성
+                    var notification = new Notification(title, { body: body });
+                } else {
+                    alert("알림 권한이 없습니다.");
+                }
+            });
+        }
+
+        function saveEvent() {
+            var eventDate = document.getElementById('eventDate').value;
+            var eventTime = document.getElementById('eventTime').value;
+            var eventContent = document.getElementById('eventContent').value;
+
+            // 해당 날짜와 시간의 일정을 객체에 저장
+            var eventKey = eventDate + " " + eventTime;
+            events[eventKey] = eventContent;
+
+            // 저장 후 폼 숨기기
+            document.getElementById('eventForm').style.display = 'none';
+        }
+
+    </script>
+</body>
+
+</html>
