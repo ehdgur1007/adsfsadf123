@@ -1,5 +1,5 @@
 var currentYear, currentMonth;
-var events = {}; // 날짜별 일정을 저장할 객체
+var events = {};
 
 window.onload = function () {
     var date = new Date();
@@ -52,8 +52,6 @@ function generateCalendar(year, month) {
         } else if (dayOfWeek == 6) {
             dayClass = 'saturday';
         }
-
-        // 현재 날짜이면 today 클래스 추가
         if (i === new Date().getDate() && currentYear === new Date().getFullYear() && currentMonth === new Date().getMonth() + 1) {
             calendar += '<td class="' + dayClass + ' today" onclick="showEventForm(' + currentYear + ',' + currentMonth + ',' + i + ')">' + i + '</td>';
         } else {
@@ -62,14 +60,12 @@ function generateCalendar(year, month) {
 
         dayOfWeek++;
     }
-
     while (dayOfWeek < 7) {
         calendar += '<td></td>';
         dayOfWeek++;
     }
-
     calendar += '</tr></table>';
-    $("#calendar").html(calendar); // jQuery를 사용하여 calendar에 HTML을 삽입
+    $("#calendar").html(calendar);
 }
 
 function showEventForm(year, month, day) {
@@ -80,7 +76,6 @@ function showEventForm(year, month, day) {
     document.getElementById('eventDate').value = dateString;
     document.getElementById('eventTime').value = (hours < 10 ? '0' : '') + hours + ":" + (minutes < 10 ? '0' : '') + minutes;
 
-    // 해당 날짜와 시간에 대한 일정을 폼에 표시
     var eventKey = dateString + " " + document.getElementById('eventTime').value;
     if (events[eventKey]) {
         document.getElementById('eventContent').value = events[eventKey];
@@ -88,15 +83,10 @@ function showEventForm(year, month, day) {
         document.getElementById('eventContent').value = '';
     }
 
-    // 일정 추가 폼을 화면에 표시
     document.getElementById('eventForm').style.display = 'block';
-
-    // 알림 설정
+    
     setReminder(year, month, day, hours, minutes);
 }
-
-
-
 
 function setReminder(year, month, day) {
     var dateString = year + "년 " + month + "월 " + day + "일";
@@ -131,10 +121,8 @@ function saveEvent() {
     var eventTime = document.getElementById('eventTime').value;
     var eventContent = document.getElementById('eventContent').value;
 
-    // 해당 날짜와 시간의 일정을 객체에 저장
     var eventKey = eventDate + " " + eventTime;
     events[eventKey] = eventContent;
 
-    // 저장 후 폼 숨기기
     document.getElementById('eventForm').style.display = 'none';
 }
