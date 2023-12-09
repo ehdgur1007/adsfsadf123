@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <title>알람 예제</title>
+    <link rel="stylesheet" href="project_style.css">
+</head>
+
+<body>
+    <div id="calendarControls">
+        <button id="prevMonth">←</button>
+        <span id="calendarLabel"></span>
+        <button id="nextMonth">→</button>
+    </div>
+    <div id="calendar"></div>
+
+    <div id="eventForm" style="display: none;">
+        <form onsubmit="saveEvent(); return false;">
+            <label for="eventDate">날짜:</label>
+            <input type="text" id="eventDate" readonly>
+            <br>
+            <label for="eventTime">시간:</label>
+            <input type="time" id="eventTime">
+            <br>
+            <label for="eventContent">일정:</label>
+            <input type="text" id="eventContent" required>
+            <br>
+            <input type="submit" value="저장">
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="project_script.js"></script>
+</body>
+
+</html>
