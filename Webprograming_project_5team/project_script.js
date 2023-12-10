@@ -26,7 +26,28 @@ document.getElementById('nextMonth').addEventListener('click', function () {
     updateCalendar();
 });
 
+var monthBackgrounds = [
+    'url(images/1월.gif)',
+    'url(images/2월.gif)',
+    'url(images/3월.gif)',
+    'url(images/4월.gif)',
+    'url(images/5월.gif)',
+    'url(images/6월.gif)',
+    'url(images/7월.gif)',
+    'url(images/8월.gif)',
+    'url(images/9월.gif)',
+    'url(images/10월.gif)',
+    'url(images/11월.gif)',
+    'url(images/12월.gif)',
+];
+
+var currentBackgroundIndex = 0;
+
 function updateCalendar() {
+    currentBackgroundIndex = (currentBackgroundIndex + 1) % monthBackgrounds.length;
+    var currentBackground = monthBackgrounds[currentBackgroundIndex];
+
+    document.querySelector('body').style.backgroundImage = currentBackground;
     document.getElementById('calendarLabel').textContent = currentYear + '년 ' + currentMonth + '월';
     generateCalendar(currentYear, currentMonth);
 }
@@ -52,6 +73,7 @@ function generateCalendar(year, month) {
         } else if (dayOfWeek == 6) {
             dayClass = 'saturday';
         }
+
         if (i === new Date().getDate() && currentYear === new Date().getFullYear() && currentMonth === new Date().getMonth() + 1) {
             calendar += '<td class="' + dayClass + ' today" onclick="showEventForm(' + currentYear + ',' + currentMonth + ',' + i + ')">' + i + '</td>';
         } else {
@@ -60,33 +82,41 @@ function generateCalendar(year, month) {
 
         dayOfWeek++;
     }
+
     while (dayOfWeek < 7) {
         calendar += '<td></td>';
         dayOfWeek++;
     }
+
     calendar += '</tr></table>';
-    $("#calendar").html(calendar);
+    $("#calendar").html(calendar); 
 }
 
 function showEventForm(year, month, day) {
-    var date = new Date();
-    var hours = date.getHours();
-    var minutes = date.getMinutes();
     var dateString = year + "년 " + month + "월 " + day + "일";
-    document.getElementById('eventDate').value = dateString;
-    document.getElementById('eventTime').value = (hours < 10 ? '0' : '') + hours + ":" + (minutes < 10 ? '0' : '') + minutes;
 
-    var eventKey = dateString + " " + document.getElementById('eventTime').value;
-    if (events[eventKey]) {
-        document.getElementById('eventContent').value = events[eventKey];
-    } else {
-        document.getElementById('eventContent').value = '';
+    var currentDate = new Date();
+    var currentHour = currentDate.getHours();
+    var currentMinute = currentDate.getMinutes();
+
+    var timeInput = prompt("일정 시간을 입력하세요 (hh:mm)", currentHour + ":" + currentMinute);
+
+    if (timeInput) {
+        var timeComponents = timeInput.split(':');
+        var hour = parseInt(timeComponents[0], 10);
+        var minute = parseInt(timeComponents[1], 10);
+
+        if (!isNaN(hour) && !isNaN(minute) && hour >= 0 && hour < 24 && minute >= 0 && minute < 60) {
+            
+            setReminder(year, month, day, hour, minute);
+            document.getElementById('eventDate').value = dateString + " " + timeInput;
+            document.getElementById('eventForm').style.display = 'block';
+        } else {
+            alert("유효하지 않은 시간입니다. 다시 입력해주세요.");
+        }
     }
-
-    document.getElementById('eventForm').style.display = 'block';
-    
-    setReminder(year, month, day, hours, minutes);
 }
+
 
 function setReminder(year, month, day) {
     var dateString = year + "년 " + month + "월 " + day + "일";
@@ -105,10 +135,8 @@ function setReminder(year, month, day) {
 }
 
 function showNotification(title, body) {
-    // Notification 권한 요청
     Notification.requestPermission().then(function (permission) {
         if (permission === "granted") {
-            // Notification 생성
             var notification = new Notification(title, { body: body });
         } else {
             alert("알림 권한이 없습니다.");
@@ -118,11 +146,9 @@ function showNotification(title, body) {
 
 function saveEvent() {
     var eventDate = document.getElementById('eventDate').value;
-    var eventTime = document.getElementById('eventTime').value;
     var eventContent = document.getElementById('eventContent').value;
 
-    var eventKey = eventDate + " " + eventTime;
-    events[eventKey] = eventContent;
+    events[eventDate] = eventContent;
 
     document.getElementById('eventForm').style.display = 'none';
 }
