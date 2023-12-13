@@ -1,83 +1,75 @@
-table {
-    border-collapse: collapse;
-    margin: auto;
-}
-
-th,
-td {
-    padding: 30px;
-    text-align: center;
-    font-size: 30px;
-}
+table {border-collapse: collapse; margin: auto;}
+        th,td {padding: 37px; text-align: center; font-size:45px;}
+        .saturday {color: gray;}
+        .sunday,.holiday,.today {color: red;}
+        .today {border: 1px; border-radius: 50%;color: white;background-color: red;}
+        #calendarControls {text-align: center; font-size:50px; font-family: 'NanumSquareRoundOTFEB';}
+        #calendarControls button {
+                font-size: 50px;
+                width: 100px;
+        }
+        @font-face {font-family: 'NanumSquareRoundOTFEB'; src: url('NanumSquareRoundOTFEB.otf') format('opentype');}
+            #calendar {font-family: 'NanumSquareRoundOTFEB', monospace;}
+        #eventForm {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+        }
+        #eventForm label {font-size: 30px;}
+        #eventForm input {font-size: 30px;}
 
 body {
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+        background-repeat: no-repeat;
+        background-size: cover;
+}
+body::after {
+  content: "";
+  background: rgba(255, 255, 255, 0.5);
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  position: absolute;
+  z-index: -1;
 }
 
-
-/* 테두리 스타일을 제거했습니다. */
-.saturday {
-    color: blue;
+.memo-container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-.sunday,
-.holiday,
-.today {
-    color: red;
+.memo-input {
+  width: 100%;
+  margin-bottom: 10px;
 }
 
-.today {
-    border: 1px;
-    border-radius: 50%;
-    color: white;
-    background-color: red;
+.memo-list {
+  list-style: none;
+  padding: 0;
 }
 
-#calendar {
-    background-color: white;
-    width: 30%;
-    margin: auto;
-    max-width: 700px;
-    min-width: 500px;
+.memo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #f1f1f1;
+  margin-bottom: 10px;
 }
 
-@media (max-width: 700px) {
-    #calendar {
-        width: 50%;
-    }
+.memo-item .memo-content {
+  flex-grow: 1;
 }
 
-@media (min-width: 500px) {
-    #calendar {
-        width: 50%;
-    }
+.memo-item .memo-actions {
+  display: flex;
+  gap: 10px;
 }
 
-
-#calendarControls {
-    text-align: center;
-    font-size: 50px;
-}
-
-#calendarControls button {
-    font-size: 50px;
-    width: 100px;
-}
-
-#eventForm {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
-
-#eventForm label {
-    font-size: 30px;
-}
-
-#eventForm input {
-    font-size: 30px;
+.memo-item .delete-button {
+  color: red;
+  cursor: pointer;
 }
