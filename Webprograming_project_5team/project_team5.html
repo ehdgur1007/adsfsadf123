@@ -1,36 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>기능성 달력</title>
     <link rel="stylesheet" href="project_style.css">
 </head>
 
 <body>
-    <header class="major">
-        <div id="calendarControls">
-            <button id="prevMonth">←</button>
-            <span id="calendarLabel"></span>
-            <button id="nextMonth">→</button>
+    <div style="display: flex;">
+        <div style="flex: 1;">
+            <div id="calendarControls">
+                <button id="prevMonth">←</button>
+                <span id="calendarLabel"></span>
+                <button id="nextMonth">→</button>
+            </div>
+            <div id="calendar"></div>
         </div>
-        <div id="calendar"></div>
 
-        <div id="eventForm" style="display: none;">
-            <form onsubmit="saveEvent(); return false;">
-                <label for="eventDate">날짜:</label>
-                <input type="text" id="eventDate" readonly>
+        <div class="memo-container">
+            <h1>메모 기능</h1>
+            <form id="memo-form">
+                <label for="memo-date">날짜:</label>
+                <input type="text" id="memo-date" readonly>
                 <br>
-                <label for="eventContent">일정:</label>
-                <input type="text" id="eventContent" required>
+                <label for="memo-time">시간:</label>
+                <input type="time" id="memo-time">
                 <br>
-                <input type="submit" value="저장">
+                <input type="text" id="memo-input" class="memo-input" placeholder="메모를 입력하세요..." required />
+                <button type="submit">메모 추가</button>
             </form>
+            <ul id="memo-list" class="memo-list"></ul>
         </div>
-    </header>
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script src="project_script.js"></script>
 </body>
+
 </html>
