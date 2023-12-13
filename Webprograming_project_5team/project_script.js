@@ -1,11 +1,30 @@
 var currentYear, currentMonth;
 var events = {};
 
+var apiKey = "AIzaSyBdlcRqchayGH2SRcYU_cEiO4PP4jRT_0I";
+var calendarId = "ko.south_korea.official%23holiday%40group.v.calendar.google.com";
+
 window.onload = function () {
     var date = new Date();
     currentYear = date.getFullYear();
     currentMonth = date.getMonth() + 1;
     updateCalendar();
+    setSeasonalBackground(currentMonth);
+}
+
+function setSeasonalBackground(month) {
+    var season;
+    if (month >= 3 && month <= 5) {
+        season = "spring.gif";
+    } else if (month >= 6 && month <= 8) {
+        season = "summer.gif";
+    } else if (month >= 9 && month <= 11) {
+        season = "autumn.gif";
+    } else {
+        season = "winter.gif";
+    }
+    document.body.style.backgroundImage = "url('" + season + "')";
+
 }
 
 document.getElementById('prevMonth').addEventListener('click', function () {
@@ -15,6 +34,7 @@ document.getElementById('prevMonth').addEventListener('click', function () {
         currentYear--;
     }
     updateCalendar();
+    setSeasonalBackground(currentMonth);
 });
 
 document.getElementById('nextMonth').addEventListener('click', function () {
@@ -24,35 +44,32 @@ document.getElementById('nextMonth').addEventListener('click', function () {
         currentYear++;
     }
     updateCalendar();
+    setSeasonalBackground(currentMonth);
 });
 
-var monthBackgrounds = [
-    'url(images/1월.gif)',
-    'url(images/2월.gif)',
-    'url(images/3월.gif)',
-    'url(images/4월.gif)',
-    'url(images/5월.gif)',
-    'url(images/6월.gif)',
-    'url(images/7월.gif)',
-    'url(images/8월.gif)',
-    'url(images/9월.gif)',
-    'url(images/10월.gif)',
-    'url(images/11월.gif)',
-    'url(images/12월.gif)',
-];
-
-var currentBackgroundIndex = 0;
-
 function updateCalendar() {
-    currentBackgroundIndex = (currentBackgroundIndex + 1) % monthBackgrounds.length;
-    var currentBackground = monthBackgrounds[currentBackgroundIndex];
-
-    document.querySelector('body').style.backgroundImage = currentBackground;
     document.getElementById('calendarLabel').textContent = currentYear + '년 ' + currentMonth + '월';
-    generateCalendar(currentYear, currentMonth);
+
+    var startDate = new Date(currentYear, currentMonth - 1).toISOString();
+    var endDate = new Date(currentYear, currentMonth).toISOString();
+
+    var url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`
+    + `?key=${apiKey}`
+    + `&orderBy=startTime`
+    + `&singleEvents=true`
+    + `&timeMin=${startDate}`
+    + `&timeMax=${endDate}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            var holidays = data.items ? data.items.map(item => new Date(item.start.date).getDate()) : [];
+            generateCalendar(currentYear, currentMonth, holidays);
+        })
+        .catch(console.error);
 }
 
-function generateCalendar(year, month) {
+function generateCalendar(year, month, holidays) {
     var date = new Date(year, month - 1, 1);
     var daysInMonth = new Date(year, month, 0).getDate();
     var dayOfWeek = date.getDay();
@@ -72,6 +89,8 @@ function generateCalendar(year, month) {
             dayClass = 'sunday';
         } else if (dayOfWeek == 6) {
             dayClass = 'saturday';
+        } else if (holidays.includes(i)) {
+            dayClass += 'holiday';
         }
 
         if (i === new Date().getDate() && currentYear === new Date().getFullYear() && currentMonth === new Date().getMonth() + 1) {
@@ -89,66 +108,95 @@ function generateCalendar(year, month) {
     }
 
     calendar += '</tr></table>';
-    $("#calendar").html(calendar); 
+    $("#calendar").html(calendar);
 }
 
 function showEventForm(year, month, day) {
+    var date = new Date();
+    var hours = date.getHours();
+    var minutes = date.getMinutes();
     var dateString = year + "년 " + month + "월 " + day + "일";
-
-    var currentDate = new Date();
-    var currentHour = currentDate.getHours();
-    var currentMinute = currentDate.getMinutes();
-
-    var timeInput = prompt("일정 시간을 입력하세요 (hh:mm)", currentHour + ":" + currentMinute);
-
-    if (timeInput) {
-        var timeComponents = timeInput.split(':');
-        var hour = parseInt(timeComponents[0], 10);
-        var minute = parseInt(timeComponents[1], 10);
-
-        if (!isNaN(hour) && !isNaN(minute) && hour >= 0 && hour < 24 && minute >= 0 && minute < 60) {
-            
-            setReminder(year, month, day, hour, minute);
-            document.getElementById('eventDate').value = dateString + " " + timeInput;
-            document.getElementById('eventForm').style.display = 'block';
-        } else {
-            alert("유효하지 않은 시간입니다. 다시 입력해주세요.");
-        }
-    }
+    document.getElementById('memo-date').value = dateString;
+    document.getElementById('memo-time').value = (hours < 10 ? '0' : '') + hours + ":" + (minutes < 10 ? '0' : '') + minutes;
 }
 
+const memoForm = document.getElementById("memo-form");
+const memoInput = document.getElementById("memo-input");
+const memoList = document.getElementById("memo-list");
 
-function setReminder(year, month, day) {
-    var dateString = year + "년 " + month + "월 " + day + "일";
+const memos = JSON.parse(localStorage.getItem("memos")) || [];
 
-    var reminderDate = new Date(year, month - 1, day);
-    var currentDate = new Date();
-    var timeDiff = reminderDate.getTime() - currentDate.getTime();
+renderMemos();
 
-    if (timeDiff > 0) {
-        setTimeout(function () {
-            showNotification("일정 알림", dateString + "의 일정이 있습니다!");
-        }, timeDiff);
-    } else {
-        alert("이미 지난 날짜에는 알림을 설정할 수 없습니다.");
+memoForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const memoDate = document.getElementById('memo-date').value;
+    const memoTime = document.getElementById('memo-time').value;
+    const memoContent = memoInput.value.trim();
+
+    if (memoContent) {
+        const memo = {
+            id: Date.now(),
+            content: memoDate + " " + memoTime + "ㅤㅤㅤㅤㅤㅤㅤㅤㅤ" + memoContent
+        };
+
+        memos.push(memo);
+
+        saveMemos();
+
+        memoInput.value = "";
+
+        renderMemos();
     }
-}
+});
 
-function showNotification(title, body) {
-    Notification.requestPermission().then(function (permission) {
-        if (permission === "granted") {
-            var notification = new Notification(title, { body: body });
-        } else {
-            alert("알림 권한이 없습니다.");
-        }
+memoList.addEventListener("click", function (e) {
+    if (e.target.classList.contains("delete-button")) {
+        const memoId = parseInt(
+            e.target.parentElement.parentElement.dataset.id
+        );
+        memos.splice(
+            memos.findIndex((memo) => memo.id === memoId),
+            1
+        );
+        saveMemos();
+
+        renderMemos();
+    }
+});
+
+function renderMemos() {
+    memoList.innerHTML = "";
+
+    if (memos.length === 0) {
+        memoList.innerHTML = "<li>현재 메모가 없습니다.</li>";
+        return;
+    }
+
+    memos.forEach((memo) => {
+        const memoItem = document.createElement("li");
+        memoItem.classList.add("memo-item");
+        memoItem.dataset.id = memo.id;
+
+        const memoContent = document.createElement("div");
+        memoContent.classList.add("memo-content");
+        memoContent.textContent = memo.content;
+
+        const memoActions = document.createElement("div");
+        memoActions.classList.add("memo-actions");
+
+        const deleteButton = document.createElement("span");
+        deleteButton.classList.add("delete-button");
+        deleteButton.textContent = "Delete";
+
+        memoActions.appendChild(deleteButton);
+        memoItem.appendChild(memoContent);
+        memoItem.appendChild(memoActions);
+        memoList.appendChild(memoItem);
     });
 }
 
-function saveEvent() {
-    var eventDate = document.getElementById('eventDate').value;
-    var eventContent = document.getElementById('eventContent').value;
-
-    events[eventDate] = eventContent;
-
-    document.getElementById('eventForm').style.display = 'none';
+function saveMemos() {
+    localStorage.setItem("memos", JSON.stringify(memos));
 }
