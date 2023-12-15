@@ -13,18 +13,9 @@ window.onload = function () {
 }
 
 function setSeasonalBackground(month) {
-    var season;
-    if (month >= 3 && month <= 5) {
-        season = "spring.gif";
-    } else if (month >= 6 && month <= 8) {
-        season = "summer.gif";
-    } else if (month >= 9 && month <= 11) {
-        season = "autumn.gif";
-    } else {
-        season = "winter.gif";
-    }
-    document.body.style.backgroundImage = "url('" + season + "')";
-
+    var seasons = ["winter", "spring", "summer", "autumn"];
+    var season = seasons[Math.floor((month % 12) / 3)];
+    document.body.style.backgroundImage = `url('${season}.gif')`;
 }
 
 document.getElementById('prevMonth').addEventListener('click', function () {
@@ -167,34 +158,20 @@ memoList.addEventListener("click", function (e) {
 });
 
 function renderMemos() {
-    memoList.innerHTML = "";
+    memoList.innerHTML = memos.length === 0
+        ? "<li>현재 메모가 없습니다.</li>"
+        : memos.map(createMemoItem).join('');
+}
 
-    if (memos.length === 0) {
-        memoList.innerHTML = "<li>현재 메모가 없습니다.</li>";
-        return;
-    }
-
-    memos.forEach((memo) => {
-        const memoItem = document.createElement("li");
-        memoItem.classList.add("memo-item");
-        memoItem.dataset.id = memo.id;
-
-        const memoContent = document.createElement("div");
-        memoContent.classList.add("memo-content");
-        memoContent.textContent = memo.content;
-
-        const memoActions = document.createElement("div");
-        memoActions.classList.add("memo-actions");
-
-        const deleteButton = document.createElement("span");
-        deleteButton.classList.add("delete-button");
-        deleteButton.textContent = "Delete";
-
-        memoActions.appendChild(deleteButton);
-        memoItem.appendChild(memoContent);
-        memoItem.appendChild(memoActions);
-        memoList.appendChild(memoItem);
-    });
+function createMemoItem(memo) {
+    return `
+        <li class="memo-item" data-id="${memo.id}">
+            <div class="memo-content">${memo.content}</div>
+            <div class="memo-actions">
+                <span class="delete-button">Delete</span>
+            </div>
+        </li>
+    `;
 }
 
 function saveMemos() {
