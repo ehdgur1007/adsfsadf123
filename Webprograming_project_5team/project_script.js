@@ -115,7 +115,7 @@ function showEventForm(year, month, day) {
     var date = new Date();
     var hours = date.getHours();
     var minutes = date.getMinutes();
-    var dateString = year + "년 " + month + "월 " + day + "일";
+    var dateString = year + "년 " + (month < 10 ? '0' : '') + month + "월 " + (day < 10 ? '0' : '') + day + "일";
     document.getElementById('memo-date').value = dateString;
     document.getElementById('memo-time').value = (hours < 10 ? '0' : '') + hours + ":" + (minutes < 10 ? '0' : '') + minutes;
 }
